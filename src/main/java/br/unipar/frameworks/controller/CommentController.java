@@ -5,35 +5,35 @@ import br.unipar.frameworks.model.Comment;
 import br.unipar.frameworks.model.Product;
 import br.unipar.frameworks.repository.CommentRepository;
 import br.unipar.frameworks.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/comments")
 @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 public class CommentController {
 
-    private final CommentRepository commentRepository;
-    private final ProductRepository productRepository;
+    private final CommentRepository repositorioComentario;
+    private final ProductRepository repositorioProduto;
 
-    public CommentController(CommentRepository commentRepository, ProductRepository productRepository) {
-        this.commentRepository = commentRepository;
-        this.productRepository = productRepository;
+    public CommentController(CommentRepository repositorioComentario, ProductRepository repositorioProduto) {
+        this.repositorioComentario = repositorioComentario;
+        this.repositorioProduto = repositorioProduto;
     }
 
     @GetMapping("/product/{productId}")
-    public List<Comment> listByProduct(@PathVariable Long productId) {
-        return commentRepository.findByProductId(productId);
+    public Page<Comment> listarPorProduto(@PathVariable Long productId, Pageable paginacao) {
+        return repositorioComentario.findByProductId(productId, paginacao);
     }
 
     @PostMapping
-    public Comment create(@RequestBody CommentRequest request) {
-        Product product = productRepository.findById(request.productId()).orElseThrow();
-        Comment comment = new Comment();
-        comment.setText(request.text());
-        comment.setProduct(product);
-        return commentRepository.save(comment);
+    public Comment criar(@RequestBody CommentRequest requisicao) {
+        Product produto = repositorioProduto.findById(requisicao.productId()).orElseThrow();
+        Comment comentario = new Comment();
+        comentario.setText(requisicao.text());
+        comentario.setProduct(produto);
+        return repositorioComentario.save(comentario);
     }
 }

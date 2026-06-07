@@ -1,6 +1,7 @@
 package br.unipar.frameworks.config;
 
 import br.unipar.frameworks.security.FiltroAutenticacaoJwt;
+import br.unipar.frameworks.security.FiltroLimiteRequisicoes;
 import br.unipar.frameworks.security.ServicoDetalhesUsuario;
 import br.unipar.frameworks.security.ServicoHashSenha;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -18,10 +19,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * API stateless: login devolve JWT; demais rotas exigem Bearer token.
- * Roles continuam no @PreAuthorize dos controllers.
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -31,15 +28,18 @@ public class ConfiguracaoSeguranca {
     private final ServicoDetalhesUsuario servicoDetalhesUsuario;
     private final ServicoHashSenha servicoHashSenha;
     private final FiltroAutenticacaoJwt filtroAutenticacaoJwt;
+    private final FiltroLimiteRequisicoes filtroLimiteRequisicoes;
 
     public ConfiguracaoSeguranca(
             ServicoDetalhesUsuario servicoDetalhesUsuario,
             ServicoHashSenha servicoHashSenha,
-            FiltroAutenticacaoJwt filtroAutenticacaoJwt
+            FiltroAutenticacaoJwt filtroAutenticacaoJwt,
+            FiltroLimiteRequisicoes filtroLimiteRequisicoes
     ) {
         this.servicoDetalhesUsuario = servicoDetalhesUsuario;
         this.servicoHashSenha = servicoHashSenha;
         this.filtroAutenticacaoJwt = filtroAutenticacaoJwt;
+        this.filtroLimiteRequisicoes = filtroLimiteRequisicoes;
     }
 
     @Bean
@@ -53,10 +53,12 @@ public class ConfiguracaoSeguranca {
                 .authorizeHttpRequests(autorizacao -> autorizacao
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/xss-demo.html").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                .addFilterBefore(filtroLimiteRequisicoes, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(filtroAutenticacaoJwt, UsernamePasswordAuthenticationFilter.class)
                 .headers(cabecalhos -> cabecalhos.frameOptions(frame -> frame.sameOrigin()));
 
