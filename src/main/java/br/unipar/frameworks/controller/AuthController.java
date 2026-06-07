@@ -64,7 +64,7 @@ public class AuthController {
             long expiraEmSegundos = servicoTokenJwt.getExpiracaoMs() / 1000;
 
             return ResponseEntity.ok(Map.of(
-                    "message", "Login OK — envie o token no header Authorization",
+                    "message", "Login OK envie o token no header Authorization",
                     "token", token,
                     "tipoToken", "Bearer",
                     "expiresIn", expiraEmSegundos,
